@@ -1,6 +1,8 @@
 package repository;
 
 import model.App;
+import model.Review;
+
 import java.util.Collection;
 
 /**
@@ -46,5 +48,7 @@ public interface AppRepository {
      * @return A collection of all {@link App} objects.
      */
     Collection<App> getAll();
+
+    void addReview(Review review);
 }
 

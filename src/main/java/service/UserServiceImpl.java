@@ -1,5 +1,8 @@
 package service;
 
+import model.User;
+import repository.UserRepository;
+import repository.UserRepositoryImpl;
 import util.Input;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +16,7 @@ import java.util.Map;
 
 public class UserServiceImpl implements UserService {
 
-    private final Map<String,String> users = new HashMap<>();
+    private final UserRepository userRepository = new UserRepositoryImpl();
 
     /**
      * Helper method to display a prompt and read a string input.
@@ -44,7 +47,7 @@ public class UserServiceImpl implements UserService {
             return;
         }
 
-        if (users.containsKey(userName)) {
+        if (userRepository.getByUsername(userName)!= null) {
             System.out.println("Username Already Exist.");
             return;
         }
@@ -60,7 +63,8 @@ public class UserServiceImpl implements UserService {
             return;
         }
 
-        users.put(userName, password);
+        final User newuser = new User(userName, password);
+        userRepository.save(newuser);
         System.out.println("Signup complete.");
     }
 
@@ -71,21 +75,22 @@ public class UserServiceImpl implements UserService {
      */
 
     @Override
-    public boolean signIn() {
+    public User signIn() {
         final String userName = promptInput("UserName: ");
+        final User user = userRepository.getByUsername(userName);
 
-        if (!users.containsKey(userName)) {
+        if (user == null) {
             System.out.println("UserName NotFound. ");
-            return false;
+            return null;
         }
         final String password = promptInput("PassWord: ");
 
-        if (users.get(userName).equals(password)) {
+        if (user.getPassword().equals(password)) {
             System.out.println("Login SuccessFully. ");
-            return true;
+            return user;
         } else {
             System.out.println("Wrong PassWord. ");
         }
-        return false;
+        return null;
     }
 }

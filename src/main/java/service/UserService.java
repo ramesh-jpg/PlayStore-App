@@ -1,5 +1,7 @@
 package service;
 
+import model.User;
+
 /**
  * Defines the contract for user authentication and account management.
  * <p>
@@ -18,5 +20,5 @@ public interface UserService {
      * Authenticates a user based on their credentials.
      * return {code true} if authentication is successful, { code false} otherwise.
      */
-    boolean signIn();
+    User signIn();
 }

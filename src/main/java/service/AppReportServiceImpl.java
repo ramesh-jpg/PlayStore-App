@@ -3,9 +3,15 @@ package service;
 import model.App;
 import repository.AppRepository;
 import util.Input;
-
 import java.util.Collection;
 import java.util.stream.Collectors;
+
+/**
+ * Implementation of the Report Service.
+ * <p>
+ * This class fetches raw data from {@link AppRepository} and performs
+ * filtering and sorting to generate user reports.
+ */
 
 public class AppReportServiceImpl implements AppReportService {
 
@@ -15,6 +21,9 @@ public class AppReportServiceImpl implements AppReportService {
         this.appRepository = repository;
     }
 
+    /**
+     * Fetches all apps and filters only the ones where installed = true.
+     */
     @Override
     public void showInstalledApps() {
         final Collection<App> allApps = appRepository.getAll();
@@ -46,8 +55,8 @@ public class AppReportServiceImpl implements AppReportService {
         for (final App app : appRepository.getAll()) {
 
             if (app.getAuthorName().trim().toLowerCase().equals(author)) {
-                System.out.println(app.getName() + " - " + app.getInstallCount());
-                totalCount += app.getInstallCount();
+                System.out.println(app.getName() + " - " + app.getInstalledCount());
+                totalCount += app.getInstalledCount();
             }
         }
 

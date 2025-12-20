@@ -1,6 +1,9 @@
 package service;
 
 import model.App;
+import model.Author;
+import model.Review;
+import model.User;
 import repository.AppRepository;
 import util.Input;
 
@@ -35,21 +38,16 @@ public class AppServiceImpl implements AppService {
      */
     @Override
     public void createApp() {
-        final int appId = Input.readInt("App Id: ");
-
-        if (appRepository.findById(appId) != null) {
-            System.out.println("App Id already exists.");
-            return;
-        }
 
         final String name = Input.readString("App Name: ");
         final String authorName = Input.readString("AuthorName: ");
+        Author author = new Author(0,authorName);
         final String description = Input.readString("Description: ");
         final double version = Input.readDouble("Version: ");
         final String featuresInput = Input.readString("Features: ");
         final List<String> features = Arrays.asList(featuresInput.split(","));
 
-        appRepository.save(new App(appId, name, authorName, description, version, features));
+        appRepository.save(new App( 0,name, author, description, version, features,0.0,0));
         System.out.println("App Created.");
     }
 
@@ -79,9 +77,10 @@ public class AppServiceImpl implements AppService {
         final String featuresInput = Input.readString("New Features: ");
         final List<String> features = Arrays.asList(featuresInput.split(","));
         existingApp.setName(name);
+        existingApp.setFeatures(features);
         existingApp.setDescription(description);
         existingApp.setVersion(version);
-        existingApp.setFeatures(features);
+
 
         appRepository.update(existingApp);
         System.out.println("App Updated. ");
@@ -168,9 +167,21 @@ public class AppServiceImpl implements AppService {
         System.out.println(app.getName() + " UnInstalled.");
     }
 
-    /**
-     * Displays a list of all currently installed applications.
-     * Uses Java Streams to filter the list.
-     */
+    public void writeReview(final User signInUser) {
+        System.out.println("Write a Review.");
+
+        final int appId = Input.readInt("Enter App ID to review: ");
+
+        if (appRepository.findById(appId) == null) {
+            System.out.println("App not found!");
+            return;
+        }
+
+        final double rating = Input.readDouble("Rating : ");
+        final String comment = Input.readString("Comment: ");
+
+        final Review review = new Review(0, signInUser.getUserId(), signInUser.getUsername(), appId, rating, comment);
+        appRepository.addReview(review);
+    }
 
 }

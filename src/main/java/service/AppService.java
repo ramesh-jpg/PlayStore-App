@@ -1,5 +1,7 @@
 package service;
 
+import model.User;
+
 /**
  * Defines administrative operations for managing the applications.
  * <p>
@@ -49,4 +51,5 @@ public interface AppService {
     void unInstallApp();
 
 
+    void writeReview(User signInUser);
 }
