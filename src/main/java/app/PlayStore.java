@@ -1,5 +1,6 @@
 package app;
 
+import model.User;
 import service.AppReportServiceImpl;
 import service.AppServiceImpl;
 import repository.AppRepositoryImpl;
@@ -40,8 +41,9 @@ public final class PlayStore {
                     userService.signUp();
                     break;
                 case 2:
-                    if (userService.signIn()) {
-                        AppMenu.start(appService,reportService);
+                    final User signInUser = userService.signIn();
+                    if (signInUser != null) {
+                        AppMenu.start(appService, reportService, signInUser);
                     }
                     break;
                 case 3:

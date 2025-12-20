@@ -10,62 +10,99 @@ import java.util.Objects;
 
 public final class App {
 
-    private final int id;
+    private final int appId;
     private String name;
-    private final String authorName;
+    private Author author;
     private String description;
     private double version;
     private List<String> features;
     private double rating =0;
     private boolean installed;
     private int installedCount;
+    private List<Review> reviews;
 
     /**
      * This Constructor new app creation details
-     * @param id             Unique identifier for the app.
+     * @param appId             Unique identifier for the app.
      * @param name           Name of the Application
-     * @param authorName     Author of the application
+     * @param author     Author of the application
      * @param version        Current Version Number
      * @param features       Application features
+     * @param rating         Appilication rating
      */
-    public App(final int id, final String name,final String authorName,final String description, final double version, final  List<String> features) {
-        this.id = id;
+    public App(final int appId, final String name,Author author,final String description, final double version, final  List<String> features,final double rating,final int installedCount) {
+        this.appId = appId;
         this.name = name;
-        this.authorName = authorName;
+        this.author = author;
         this.description = description;
         this.version = version;
         this.features = features;
+        this.rating= rating;
         this.installedCount =0;
     }
 
-    public int getId() { return id; }
+    public int getAppId() {
+        return appId;
+    }
 
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
-    public String getAuthorName(){ return authorName; }
+    public String getAuthorName() {
+        return author.getAuthorName();
+    }
 
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
-    public double getVersion() { return version; }
+    public double getVersion() {
+        return version;
+    }
 
-    public  List<String> getFeatures() {return features; }
+    public double getRating() {
+        return rating;
+    }
 
-    public boolean isInstalled() {return installed; }
+    public int getInstalledCount() {
+        return installedCount;
+    }
 
-    public int getInstallCount(){ return installedCount; }
+    public List<String> getFeatures() {
+        return features;
+    }
 
-    public void setName(final String name) { this.name = name; }
+    public List<Review> getReviews() {
+        return reviews;
+    }
 
-    public void setDescription(final String description) { this.description = description; }
+    public void setName(final String name) {
+        this.name = name;
+    }
 
-    public void setVersion(final double version) { this.version = version; }
+    public void setFeatures(final List<String> features) {
+        this.features = features;
+    }
 
-    public void setFeatures(final  List<String> features) {this.features = features; }
+    public void setDescription(final String description) {
+        this.description = description;
+    }
+
+    public void setVersion(final double version) {
+        this.version = version;
+    }
+
+    public boolean isInstalled() {
+        return installed;
+    }
+
+    public void setReviews(final List<Review> reviews) {
+        this.reviews = reviews;
+    }
 
     public void install() {this.installed = true; }
-
     public void uninstall() {this.installed = false; }
-
     public void installedCount() {
         installedCount++;
     }
@@ -73,9 +110,9 @@ public final class App {
     @Override
     public String toString() {
         return "App{" +
-                "id=" + id +
+                "id=" + appId +
                 ", name='" + name + '\'' +
-                ", authorName='" + authorName + '\'' +
+                ", authorName='" + author.getAuthorName() + '\'' +
                 ", description='" + description + '\'' +
                 ", version=" + version +
                 ", features='" + features + '\'' +
@@ -88,11 +125,11 @@ public final class App {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
         App app = (App) object;
-        return id == app.id;
+        return appId == app.appId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(appId);
     }
 }
