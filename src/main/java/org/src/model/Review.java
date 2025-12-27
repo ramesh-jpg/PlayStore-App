@@ -1,4 +1,4 @@
-package model;
+package org.src.model;
 
 import java.util.Objects;
 
@@ -9,7 +9,7 @@ import java.util.Objects;
  * with a review. It serves as a data transfer object between the database
  * and the app logic.
  */
-public class Review {
+public final class Review {
     private final int reviewId;
     private int userId;
     private String userName;

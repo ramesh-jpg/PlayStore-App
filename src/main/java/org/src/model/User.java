@@ -1,4 +1,4 @@
-package model;
+package org.src.model;
 
 import java.util.Objects;
 /**
@@ -12,6 +12,9 @@ public final class User {
     private final int userId;
     private String username;
     private String password;
+    private String email;
+    private long phone;
+    private String role;
 
     /**
      * Constructs a new User with full details.
@@ -20,14 +23,18 @@ public final class User {
      * @param username    The unique login username.
      * @param password    The user's password (stored as plain text/hash).
      */
-    public User(final int userId, final String username,final String password) {
+    public User(final int userId, final String username,final String password,final String email,final long phone,final String role) {
         this.userId = userId;
         this.username = username;
         this.password = password;
+        this.email = email;
+        this.phone = phone;
+        this.role = role;
+
     }
 
     public User(final String username, final String password) {
-        this(0, username, password);
+        this(0, username, password,null,0,"USER");
     }
 
     public int getUserId() { return userId; }
@@ -40,9 +47,17 @@ public final class User {
         return password;
     }
 
+    public String getEmail() { return email; }
+    public long getPhone() { return phone; }
+    public String getRole() { return role; }
+
+    public boolean isAuthor() {
+        return "AUTHOR".equalsIgnoreCase(this.role);
+    }
+
     @Override
     public String toString() {
-        return "User{id=" + userId + ", username='" + username + "'}";
+        return "User{id=" + userId + ", username='" + username + "', role='" + role + "'}";
     }
 
     @Override

@@ -1,4 +1,9 @@
-package service;
+package org.src.service;
+
+import org.src.model.App;
+import org.src.model.User;
+
+import java.util.Collection;
 
 /**
  * Defines operations for generating reports and viewing application statistics.
@@ -11,11 +16,11 @@ public interface AppReportService {
     /**
      * Displays a list of all applications currently installed on the device.
      */
-    void showInstalledApps();
+    Collection<App> showInstalledApps(int userId);
 
     /**
      * Calculates and displays the total number of installations for a specific author.
      */
-    void countInstallByAuthor();
+    int countInstallByAuthor(String authorName);
 
 }

@@ -1,4 +1,4 @@
-package util;
+package org.src.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,8 +12,6 @@ import java.sql.SQLException;
  */
 public final class ConnectionUtil {
 
-    // Database Configuration Constants
-    // NOTE: Ensure these credentials match your local PostgreSQL setup
     public static final String URL = "jdbc:postgresql://localhost:5432/PlayStore";
     public static final String USER = "postgres";
     public static final String PASSWORD = "Ramesh@123";

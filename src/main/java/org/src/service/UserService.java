@@ -1,6 +1,6 @@
-package service;
+package org.src.service;
 
-import model.User;
+import org.src.model.User;
 
 /**
  * Defines the contract for user authentication and account management.
@@ -14,11 +14,11 @@ public interface UserService {
      * Registers a new user in the system.
      * Implementations should handle username validation and password security.
      */
-    void signUp();
+    void signUp(User user);
 
     /**
      * Authenticates a user based on their credentials.
      * return {code true} if authentication is successful, { code false} otherwise.
      */
-    User signIn();
+    User signIn(String username,String password);
 }

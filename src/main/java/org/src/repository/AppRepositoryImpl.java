@@ -1,9 +1,11 @@
-package repository;
+package org.src.repository;
 
-import model.App;
-import model.Author;
-import model.Review;
-import util.ConnectionUtil;
+import org.springframework.stereotype.Repository;
+import org.src.model.App;
+import org.src.model.Review;
+import org.src.model.User;
+import org.src.util.ConnectionUtil;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,6 +21,7 @@ import java.util.List;
  * This class handles CRUD operations for Apps, including managing related entities
  * like Authors, Features, and Reviews. It uses JDBC for database connectivity.
  */
+@Repository
 public class AppRepositoryImpl implements AppRepository {
 
     /**
@@ -30,12 +33,10 @@ public class AppRepositoryImpl implements AppRepository {
      */
     @Override
     public void save(final App app) {
-        final String insertApp = "INSERT INTO app (name, description, version, rating, installed_count, author_id) VALUES (?, ?, ?, ?, ?, ?) RETURNING app_id";
+        final String insertApp = "INSERT INTO app ( name, description, version, rating, installed_count, author_id) VALUES ( ?, ?, ?, ?, ?, ?)RETURNING id";
         final String insertFeatures = "INSERT INTO features (app_id, features) VALUES (?, ?)";
 
         try (final Connection connection = ConnectionUtil.getConnection()) {
-
-            final int authorId = getAuthorId(connection, app.getAuthorName());
 
             try (final PreparedStatement statement = connection.prepareStatement(insertApp)) {
                 statement.setString(1, app.getName());
@@ -43,11 +44,11 @@ public class AppRepositoryImpl implements AppRepository {
                 statement.setDouble(3, app.getVersion());
                 statement.setDouble(4, 0.0);
                 statement.setInt(5, 0);
-                statement.setInt(6, authorId);
+                statement.setInt(6,app.getAuthor().getUserId());
 
                final ResultSet resultSet = statement.executeQuery();
                 if (resultSet.next()) {
-                   final int appId = resultSet.getInt(1);
+                   final int appId = resultSet.getInt("id");
                     if (app.getFeatures() != null && !app.getFeatures().isEmpty()) {
                         try (final PreparedStatement featuresStatement = connection.prepareStatement(insertFeatures)) {
                             for (String feature : app.getFeatures()) {
@@ -78,10 +79,9 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public App findById(final int id) {
 
-        final String findApp = "SELECT a.app_id, a.name, au.author_name, a.description, a.version, a.rating, a.installed_count " +
-                "FROM app a " +
-                "JOIN author au ON a.author_id = au.author_id " +
-                "WHERE a.app_id = ?";
+        final String findApp = "SELECT a.*, u.username, u.role FROM app a " +
+                "JOIN users u ON a.author_id = u.id " +
+                "WHERE a.id = ?";
 
         try (final Connection connection = ConnectionUtil.getConnection();
              final PreparedStatement statement = connection.prepareStatement(findApp)) {
@@ -91,10 +91,10 @@ public class AppRepositoryImpl implements AppRepository {
             if (resultSet.next()) {
 
                final List<String> features = getappFeatures(connection, id);
-               final Author author = new Author(1, resultSet.getString("author_name"));
+               final User author = new User(resultSet.getInt("author_id"), resultSet.getString("username"), null, null, 0, resultSet.getString("role"));
 
                 return new App(
-                        resultSet.getInt("app_id"),
+                        resultSet.getInt("id"),
                         resultSet.getString("name"),
                         author,
                         resultSet.getString("description"),
@@ -117,7 +117,7 @@ public class AppRepositoryImpl implements AppRepository {
      */
     @Override
     public void update(final App app) {
-        final String updateQuery = "UPDATE app SET name=?, description=?, version=? WHERE app_id=?";
+        final String updateQuery = "UPDATE app SET name=?, description=?, version=? WHERE id=?";
 
         try (final Connection connection = ConnectionUtil.getConnection()) {
 
@@ -149,7 +149,7 @@ public class AppRepositoryImpl implements AppRepository {
      */
     @Override
     public boolean delete(final int id) {
-        final String deleteQuery = "DELETE FROM app WHERE app_id = ?";
+        final String deleteQuery = "DELETE FROM app WHERE id = ?";
         try (final Connection connection = ConnectionUtil.getConnection();
              final PreparedStatement statement = connection.prepareStatement(deleteQuery)) {
 
@@ -170,18 +170,17 @@ public class AppRepositoryImpl implements AppRepository {
     @Override
     public Collection<App> getAll() {
         final Collection<App> apps = new ArrayList<>();
-        final String getAllQuery = "SELECT a.app_id, a.name, au.author_name, a.description, a.version, a.rating, a.installed_count " +
-                "FROM app a " +
-                "JOIN author au ON a.author_id = au.author_id";
+        final String getAllQuery = "SELECT a.*, u.username, u.role FROM app a " +
+                "JOIN users u ON a.author_id = u.id";
 
         try (final Connection connection = ConnectionUtil.getConnection();
              final Statement statement = connection.createStatement();
              final ResultSet resultSet = statement.executeQuery(getAllQuery)) {
 
             while (resultSet.next()) {
-                int appId = resultSet.getInt("app_id");
+                int appId = resultSet.getInt("id");
                 List<String> features = getappFeatures(connection, appId);
-                Author author = new Author(1, resultSet.getString("author_name"));
+                User author = new User(resultSet.getInt("author_id"), resultSet.getString("Username"),null,null,0,resultSet.getString("role"));
 
                 apps.add(new App(
                         appId,
@@ -211,16 +210,15 @@ public class AppRepositoryImpl implements AppRepository {
      */
     @Override
     public void addReview(final Review review) {
-        final String insertReview = "INSERT INTO reviews (user_id, app_id, rating, comment) VALUES (?, ?, ?, ?)";
+        final String insertReview = "INSERT INTO reviews (user_id,app_id, rating, comment) VALUES (?, ?, ?, ?)";
 
         try (final Connection connection = ConnectionUtil.getConnection()) {
 
             try (final PreparedStatement statement = connection.prepareStatement(insertReview)) {
                 statement.setInt(1, review.getUserId());
-                statement.setString(2,review.getUserName());
-                statement.setInt(3, review.getAppId());
-                statement.setDouble(4, review.getRating());
-                statement.setString(5, review.getComment());
+                statement.setInt(2, review.getAppId());
+                statement.setDouble(3, review.getRating());
+                statement.setString(4, review.getComment());
                 statement.executeUpdate();
             }
             updateRating(connection, review.getAppId());
@@ -231,30 +229,6 @@ public class AppRepositoryImpl implements AppRepository {
         }
     }
 
-    /**
-     * Retrieves the Author ID for a given name, creating a new Author if none exists.
-     */
-    private int getAuthorId(final Connection connection, final String authorName) throws SQLException {
-
-        final String authorQuery = "SELECT author_id FROM author WHERE author_name = ?";
-        try (final PreparedStatement statement = connection.prepareStatement(authorQuery)) {
-            statement.setString(1, authorName);
-            final ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt("author_id");
-            }
-        }
-
-        final String insertAuthor = "INSERT INTO author (author_name) VALUES (?) RETURNING author_id";
-        try (final PreparedStatement statement = connection.prepareStatement(insertAuthor)) {
-            statement.setString(1, authorName);
-            final ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-        }
-        throw new SQLException("Could not handle Author creation");
-    }
 
     /**
      * Fetches the list of feature strings associated with an App ID.
@@ -288,7 +262,7 @@ public class AppRepositoryImpl implements AppRepository {
                 for (String features : newFeatures) {
                     statement.setInt(1, appId);
                     statement.setString(2, features.trim());
-                    statement.addBatch(); // Performance optimization
+                    statement.addBatch();
                 }
                 statement.executeBatch();
             }
@@ -308,7 +282,7 @@ public class AppRepositoryImpl implements AppRepository {
             if (rs.next()) rating = rs.getDouble(1);
         }
 
-        final String updateAppTable = "UPDATE app SET rating = ? WHERE app_id = ?";
+        final String updateAppTable = "UPDATE app SET rating = ? WHERE id = ?";
         try (final PreparedStatement ps = connection.prepareStatement(updateAppTable)) {
             ps.setDouble(1, rating);
             ps.setInt(2, appId);

@@ -1,4 +1,4 @@
-package model;
+package org.src.model;
 
 import java.util.List;
 import java.util.Objects;
@@ -12,13 +12,13 @@ public final class App {
 
     private final int appId;
     private String name;
-    private Author author;
+    private User author;
     private String description;
     private double version;
     private List<String> features;
     private double rating =0;
     private boolean installed;
-    private int installedCount;
+    private int installedCount =0;
     private List<Review> reviews;
 
     /**
@@ -30,7 +30,7 @@ public final class App {
      * @param features       Application features
      * @param rating         Appilication rating
      */
-    public App(final int appId, final String name,Author author,final String description, final double version, final  List<String> features,final double rating,final int installedCount) {
+    public App(final int appId, final String name,User author,final String description, final double version, final  List<String> features,final double rating,final int installedCount) {
         this.appId = appId;
         this.name = name;
         this.author = author;
@@ -38,7 +38,7 @@ public final class App {
         this.version = version;
         this.features = features;
         this.rating= rating;
-        this.installedCount =0;
+        this.installedCount = installedCount;
     }
 
     public int getAppId() {
@@ -49,8 +49,11 @@ public final class App {
         return name;
     }
 
+    public User getAuthor() {
+        return author;
+    }
     public String getAuthorName() {
-        return author.getAuthorName();
+        return author.getUsername();
     }
 
     public String getDescription() {
@@ -93,26 +96,17 @@ public final class App {
         this.version = version;
     }
 
-    public boolean isInstalled() {
-        return installed;
-    }
-
     public void setReviews(final List<Review> reviews) {
         this.reviews = reviews;
     }
 
-    public void install() {this.installed = true; }
-    public void uninstall() {this.installed = false; }
-    public void installedCount() {
-        installedCount++;
-    }
 
     @Override
     public String toString() {
         return "App{" +
                 "id=" + appId +
                 ", name='" + name + '\'' +
-                ", authorName='" + author.getAuthorName() + '\'' +
+                ", authorName='" + author.getUsername() + '\'' +
                 ", description='" + description + '\'' +
                 ", version=" + version +
                 ", features='" + features + '\'' +

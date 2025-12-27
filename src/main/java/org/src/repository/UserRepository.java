@@ -1,6 +1,6 @@
-package repository;
+package org.src.repository;
 
-import model.User;
+import org.src.model.User;
 
 /**
  * Defines the contract for User data management.

@@ -1,7 +1,7 @@
-package repository;
+package org.src.repository;
 
-import model.App;
-import model.Review;
+import org.src.model.App;
+import org.src.model.Review;
 
 import java.util.Collection;
 
