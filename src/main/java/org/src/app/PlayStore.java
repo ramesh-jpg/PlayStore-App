@@ -17,4 +17,3 @@ public class PlayStore {
         SpringApplication.run(PlayStore.class, args);
     }
 }
-

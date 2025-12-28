@@ -51,9 +51,6 @@ public final class User {
     public long getPhone() { return phone; }
     public String getRole() { return role; }
 
-    public boolean isAuthor() {
-        return "AUTHOR".equalsIgnoreCase(this.role);
-    }
 
     @Override
     public String toString() {

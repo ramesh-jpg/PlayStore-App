@@ -4,13 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.src.model.App;
 import org.src.model.Review;
-import org.src.model.User;
 import org.src.repository.AppRepository;
 import org.src.repository.InstallationRepository;
-import org.src.util.Input;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Implementation of the application management services.

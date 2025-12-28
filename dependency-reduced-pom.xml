@@ -27,7 +27,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>org.src.PlayStore</mainClass>
+                  <mainClass>org.src.app.PlayStore</mainClass>
                 </transformer>
               </transformers>
             </configuration>
