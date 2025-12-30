@@ -3,89 +3,110 @@ package org.src.model;
 import java.util.Objects;
 
 /**
- * Represents a user review for a specific app.
- * <p>
- * This class encapsulates the rating, comment, and user details associated
- * with a review. It serves as a data transfer object between the database
- * and the app logic.
+ * Represents a user review for a specific application.
+ *
+ * <p>This class encapsulates details such as the rating, user comment, and the identity of the
+ * reviewer.
  */
 public final class Review {
-    private final int reviewId;
-    private int userId;
-    private String userName;
-    private int appId;
-    private double rating;
-    private String comment;
+  private int reviewId;
+  private int userId;
+  private String userName;
+  private int appId;
+  private double rating;
+  private String comment;
 
-    /**
-     * Constructs a new Review instance.
-     * <p>
-     * Use {@code reviewId = 0} when creating a new review that hasn't been
-     * saved to the database yet.
-     *
-     * @param reviewId The unique ID of the review.
-     * @param userId   The ID of the user who wrote the review.
-     * @param userName The username of the reviewer (for display).
-     * @param appId    The ID of the app being reviewed.
-     * @param rating   The numeric rating given (e.g., 1.0 to 5.0).
-     * @param comment  The text feedback provided by the user.
-     */
-    public Review(final int reviewId, final int userId, final String userName, final int appId, final double rating,final String comment) {
-        this.reviewId = reviewId;
-        this.userId = userId;
-        this.userName = userName;
-        this.appId = appId;
-        this.rating = rating;
-        this.comment = comment;
-    }
+  /** Default constructor required for JSON deserialization. */
+  public Review() {}
 
-    public int getReviewId() {
-        return reviewId;
-    }
+  /**
+   * Constructs a new Review instance with all details.
+   *
+   * @param reviewId the unique ID of the review
+   * @param userId the ID of the user creating the review
+   * @param userName the display name of the reviewer
+   * @param appId the ID of the application being reviewed
+   * @param rating the numeric rating
+   * @param comment the textual feedback provided by the user
+   */
+  public Review(
+      final int reviewId,
+      final int userId,
+      final String userName,
+      final int appId,
+      final double rating,
+      final String comment) {
+    this.reviewId = reviewId;
+    this.userId = userId;
+    this.userName = userName;
+    this.appId = appId;
+    this.rating = rating;
+    this.comment = comment;
+  }
 
-    public int getUserId() {
-        return userId;
-    }
+  public int getReviewId() {
+    return reviewId;
+  }
 
-    public String getUserName() {
-        return userName;
-    }
+  public void setReviewId(int reviewId) {
+    this.reviewId = reviewId;
+  }
 
-    public int getAppId() {
-        return appId;
-    }
+  public int getUserId() {
+    return userId;
+  }
 
-    public double getRating() {
-        return rating;
-    }
+  public void setUserId(int userId) {
+    this.userId = userId;
+  }
 
-    public String getComment() {
-        return comment;
-    }
+  public String getUserName() {
+    return userName;
+  }
 
-    public void setRating(final double rating) {
-        this.rating = rating;
-    }
+  public void setUserName(String userName) {
+    this.userName = userName;
+  }
 
-    public void setComment(final String comment) {
-        this.comment = comment;
-    }
+  public int getAppId() {
+    return appId;
+  }
 
-    @Override
-    public String toString() {
-        return userName + ": " + rating + "* - " + comment;
-    }
+  public void setAppId(int appId) {
+    this.appId = appId;
+  }
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        Review review = (Review) object;
-        return reviewId == review.reviewId;
-    }
+  public double getRating() {
+    return rating;
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(reviewId);
-    }
+  public void setRating(double rating) {
+    this.rating = rating;
+  }
+
+  public String getComment() {
+    return comment;
+  }
+
+  public void setComment(String comment) {
+    this.comment = comment;
+  }
+
+  @Override
+  public String toString() {
+    return userName + ": " + rating + "* - " + comment;
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    if (this == object) return true;
+    if (object == null || getClass() != object.getClass()) return false;
+    Review review = (Review) object;
+    return reviewId == review.reviewId;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(reviewId);
+  }
 }
