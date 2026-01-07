@@ -39,7 +39,7 @@ public class AppStaticsServiceImpl implements AppStaticsService {
   public Collection<App> showInstalledApps(final int userId) {
     logger.info("Generating report: Fetching installed apps for User ID: {}", userId);
 
-    Collection<App> installedApps = installationRepository.getInstalledApps(userId);
+    final Collection<App> installedApps = installationRepository.getInstalledApps(userId);
 
     logger.info("App {} installed apps for User ID: {}", installedApps.size(), userId);
     return installedApps;

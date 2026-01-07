@@ -140,7 +140,7 @@ public class AppRepositoryImpl implements AppRepository {
       connection = appDataSource.getConnection();
       connection.setAutoCommit(false);
 
-      try (PreparedStatement statement = connection.prepareStatement(updateQuery)) {
+      try (final PreparedStatement statement = connection.prepareStatement(updateQuery)) {
         statement.setString(1, app.getName());
         statement.setString(2, app.getDescription());
         statement.setDouble(3, app.getVersion());
@@ -219,6 +219,7 @@ public class AppRepositoryImpl implements AppRepository {
       while (resultSet.next()) {
         int appId = resultSet.getInt("id");
         final List<String> features = getAppFeatures(connection, appId);
+
         User author = new User(
                 resultSet.getInt("author_id"),
                 resultSet.getString("username"),
@@ -252,7 +253,7 @@ public class AppRepositoryImpl implements AppRepository {
       connection = appDataSource.getConnection();
       connection.setAutoCommit(false);
 
-      try (PreparedStatement statement = connection.prepareStatement(insertReview)) {
+      try (final PreparedStatement statement = connection.prepareStatement(insertReview)) {
         statement.setInt(1, review.getUserId());
         statement.setInt(2, review.getAppId());
         statement.setDouble(3, review.getRating());
@@ -290,8 +291,8 @@ public class AppRepositoryImpl implements AppRepository {
   private List<String> getAppFeatures(final Connection connection, final int appId)
       throws SQLException {
     final List<String> features = new ArrayList<>();
-
     final String featuresQuery = "SELECT features FROM features WHERE app_id = ?";
+
     try (PreparedStatement statement = connection.prepareStatement(featuresQuery)) {
       statement.setInt(1, appId);
       ResultSet resultSet = statement.executeQuery();
@@ -310,6 +311,7 @@ public class AppRepositoryImpl implements AppRepository {
       final Connection connection, final int appId, final List<String> newFeatures)
       throws SQLException {
     final String deleteFeatures = "DELETE FROM features WHERE app_id = ?";
+
     try (final PreparedStatement statement = connection.prepareStatement(deleteFeatures)) {
       statement.setInt(1, appId);
       statement.executeUpdate();
