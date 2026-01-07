@@ -1,19 +1,37 @@
 package org.src.model;
 
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
 /**
  * Represents a user review for a specific application.
  *
- * <p>This class encapsulates details such as the rating, user comment, and the identity of the
- * reviewer.
+ * <p>Encapsulates details such as rating, user comment, and the identity of the reviewer.
  */
 public final class Review {
-  private int reviewId;
+  public static final int MIN_RATING = 1;
+  public static final int MAX_RATING = 5;
+
+  private int id;
+
+  @Positive(message = "User ID must be valid")
   private int userId;
+
   private String userName;
+
+  @Positive(message = "App ID must be valid")
   private int appId;
+
+  @DecimalMin(value = "1.0", message = "Rating must be at least 1.0")
+  @DecimalMax(value = "5.0", message = "Rating cannot exceed 5.0")
   private double rating;
+
+  @NotBlank(message = "Review comment cannot be empty")
+  @Size(max = 200, message = "Comment must not exceed 200 characters")
   private String comment;
 
   /** Default constructor required for JSON deserialization. */
@@ -22,7 +40,7 @@ public final class Review {
   /**
    * Constructs a new Review instance with all details.
    *
-   * @param reviewId the unique ID of the review
+   * @param id the unique ID of the review
    * @param userId the ID of the user creating the review
    * @param userName the display name of the reviewer
    * @param appId the ID of the application being reviewed
@@ -30,13 +48,13 @@ public final class Review {
    * @param comment the textual feedback provided by the user
    */
   public Review(
-      final int reviewId,
+      final int id,
       final int userId,
       final String userName,
       final int appId,
       final double rating,
       final String comment) {
-    this.reviewId = reviewId;
+    this.id = id;
     this.userId = userId;
     this.userName = userName;
     this.appId = appId;
@@ -44,19 +62,19 @@ public final class Review {
     this.comment = comment;
   }
 
-  public int getReviewId() {
-    return reviewId;
+  public int getId() {
+    return id;
   }
 
-  public void setReviewId(int reviewId) {
-    this.reviewId = reviewId;
+  public void setId(final int id) {
+    this.id = id;
   }
 
   public int getUserId() {
     return userId;
   }
 
-  public void setUserId(int userId) {
+  public void setUserId(final int userId) {
     this.userId = userId;
   }
 
@@ -64,7 +82,7 @@ public final class Review {
     return userName;
   }
 
-  public void setUserName(String userName) {
+  public void setUserName(final String userName) {
     this.userName = userName;
   }
 
@@ -72,7 +90,7 @@ public final class Review {
     return appId;
   }
 
-  public void setAppId(int appId) {
+  public void setAppId(final int appId) {
     this.appId = appId;
   }
 
@@ -80,7 +98,7 @@ public final class Review {
     return rating;
   }
 
-  public void setRating(double rating) {
+  public void setRating(final double rating) {
     this.rating = rating;
   }
 
@@ -88,7 +106,7 @@ public final class Review {
     return comment;
   }
 
-  public void setComment(String comment) {
+  public void setComment(final String comment) {
     this.comment = comment;
   }
 
@@ -98,15 +116,21 @@ public final class Review {
   }
 
   @Override
-  public boolean equals(Object object) {
-    if (this == object) return true;
-    if (object == null || getClass() != object.getClass()) return false;
-    Review review = (Review) object;
-    return reviewId == review.reviewId;
+  public boolean equals(final Object object) {
+    if (this == object) {
+      return true;
+    }
+    if (object == null || getClass() != object.getClass()) {
+      return false;
+    }
+
+    final Review review = (Review) object;
+
+    return id == review.id;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(reviewId);
+    return Objects.hashCode(id);
   }
 }

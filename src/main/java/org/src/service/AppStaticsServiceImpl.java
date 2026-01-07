@@ -1,6 +1,9 @@
 package org.src.service;
 
 import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.src.model.App;
@@ -8,25 +11,18 @@ import org.src.repository.AppRepository;
 import org.src.repository.InstallationRepository;
 
 /**
- * Implementation of the AppStaticsService.
+ * Implementation of the {@link AppStaticsService}.
  *
- * <p>This class fetches raw data from repositories and performs filtering and aggregation to
- * generate user reports and statistics.
+ * <p>Fetches data from repositories and performs aggregation for reports and statistics.
  */
 @Service
 public class AppStaticsServiceImpl implements AppStaticsService {
+  private static final Logger logger = LoggerFactory.getLogger(AppStaticsServiceImpl.class);
 
   private final AppRepository appRepository;
   private final InstallationRepository installationRepository;
 
-  /**
-   * Constructs the service with required repository dependencies.
-   *
-   * <p>Constructor injection ensures that the service is initialized with valid repositories
-   *
-   * @param appRepository the repository for App data
-   * @param installationRepository the repository for Installation data
-   */
+  /** Constructs the service with required repository dependencies. */
   @Autowired
   public AppStaticsServiceImpl(final AppRepository appRepository,
                                final InstallationRepository installationRepository) {
@@ -37,12 +33,16 @@ public class AppStaticsServiceImpl implements AppStaticsService {
   /**
    * Retrieves all apps currently installed by a specific user.
    *
-   * @param userId the unique identifier of the user
-   * @return a collection of installed {@link App} objects
+   * @param userId the unique identifier of the user.
    */
   @Override
   public Collection<App> showInstalledApps(final int userId) {
-    return installationRepository.getInstalledApps(userId);
+    logger.info("Generating report: Fetching installed apps for User ID: {}", userId);
+
+    Collection<App> installedApps = installationRepository.getInstalledApps(userId);
+
+    logger.info("App {} installed apps for User ID: {}", installedApps.size(), userId);
+    return installedApps;
   }
 
   /**
@@ -55,14 +55,18 @@ public class AppStaticsServiceImpl implements AppStaticsService {
    * @return the total installation count across all apps owned by the author
    */
   @Override
-  public int countInstallByAuthor(final String authorName) {
+  public int countInstallsByAuthor(final String authorName) {
+    logger.info("Calculating total installations for Author: '{}'", authorName);
+
     int totalCount = 0;
-    String searchName = authorName.trim().toLowerCase();
+    final String searchName = authorName.trim().toLowerCase();
     for (final App app : appRepository.getAll()) {
       if (app.getAuthorName().trim().equalsIgnoreCase(searchName)) {
         totalCount += app.getInstalledCount();
       }
     }
+
+    logger.info("Total installs for Author '{}': {}", authorName, totalCount);
     return totalCount;
   }
 }

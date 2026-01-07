@@ -1,7 +1,11 @@
 package org.src.controller;
 
+import jakarta.validation.Valid;
 import java.util.Collection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.src.model.App;
@@ -11,69 +15,48 @@ import org.src.service.AppService;
 /**
  * REST Controller for managing applications in the PlayStore.
  *
- * <p>This controller provides endpoints to create, update, delete, install, uninstall, and review
- * applications. It interacts with the {@link AppService} to perform business logic.
+ ** <p>Handles CRUD operations, installations, and reviews by interacting with {@link AppService}.
  */
 @RestController
 @RequestMapping("/api/apps")
-public class AppController {
+public final class AppController {
+  private static final Logger logger = LoggerFactory.getLogger(AppController.class);
 
   private final AppService appService;
 
-  /**
-   * Constructs the AppController with the required service dependency.
-   *
-   * <p>Using constructor injection ensures that the controller initialized with valid dependencies
-   *
-   * @param appService the business logic service for application management
-   */
+  /** Constructs the AppController with the required service dependency. */
   @Autowired
   public AppController(final AppService appService) {
     this.appService = appService;
   }
 
-  /**
-   * Creates a new application in the PlayStore.
-   *
-   * @param app the application object containing details like name, version, and author
-   * @return the {@link ResponseEntity} with a success message or error details
-   */
+  /** Creates a new application in the PlayStore. */
   @PostMapping
-  public ResponseEntity<String> createApp(@RequestBody final App app) {
+  public ResponseEntity<String> createApp(@Valid @RequestBody final App app) {
+    logger.info("Request received to create app: {}", app.getName());
 
-    try {
-      appService.createApp(app);
-      return ResponseEntity.ok("App Created Successfully!");
-    } catch (RuntimeException exception) {
-      return ResponseEntity.badRequest().body("Error: " + exception.getMessage());
-    }
+    appService.createApp(app);
+    logger.info("App '{}' created successfully.", app.getName());
+
+    return ResponseEntity.status(HttpStatus.CREATED).body("App Created Successfully!");
   }
 
-  /**
-   * Retrieves a list of all available applications.
-   *
-   * @return the collection of {@link App} objects representing all apps in the PlayStore
-   */
+  /** Retrieves a list of all available applications. */
   @GetMapping
   public ResponseEntity<Collection<App>> listApps() {
+    logger.info("Request received to list all apps.");
     return ResponseEntity.ok(appService.listApps());
   }
 
-  /**
-   * Updates an existing application's details.
-   *
-   * @param app the application object with updated information
-   * @return the success message if updated, otherwise an error message
-   */
+  /** Updates an existing application's */
   @PutMapping
-  public ResponseEntity<String> updateApp(@RequestBody final App app) {
+  public ResponseEntity<String> updateApp(@Valid @RequestBody final App app) {
+    logger.info("Request received to update App ID: {}", app.getId());
 
-    try {
-      appService.updateApp(app);
-      return ResponseEntity.ok("App Updated Successfully!");
-    } catch (RuntimeException exception) {
-      return ResponseEntity.badRequest().body("Error: " + exception.getMessage());
-    }
+    appService.updateApp(app);
+    logger.info("App ID '{}' updated successfully.", app.getId());
+
+    return ResponseEntity.ok("App Updated Successfully!");
   }
 
   /**
@@ -83,72 +66,50 @@ public class AppController {
    *
    * @param appId the unique identifier of the app to be deleted
    * @param authorId the unique identifier of the author performing the deletion
-   * @return the success message or error if validation fails
    */
   @DeleteMapping("/{appId}")
   public ResponseEntity<String> deleteApp(
       @PathVariable final int appId, @RequestParam final int authorId) {
+    logger.info("Request received to delete App ID: {} by Author ID: {}", appId, authorId);
 
-    try {
-      appService.deleteApp(appId, authorId);
-      return ResponseEntity.ok("App Deleted Successfully!");
-    } catch (RuntimeException exception) {
-      return ResponseEntity.badRequest().body("Error: " + exception.getMessage());
-    }
+    appService.deleteApp(appId, authorId);
+    logger.info("App ID {} deleted successfully.", appId);
+
+    return ResponseEntity.ok("App Deleted Successfully!");
   }
 
-  /**
-   * Installs an application for a specific user.
-   *
-   * @param userId the ID of the user installing the app
-   * @param appId the ID of the app being installed
-   * @return the success message upon installation
-   */
+  /** Installs an application for a specific user. */
   @PostMapping("/install")
   public ResponseEntity<String> installApp(
       @RequestParam final int userId, @RequestParam final int appId) {
+    logger.info("Request received: User {} installing App {}", userId, appId);
 
-    try {
-      appService.installApp(userId, appId);
-      return ResponseEntity.ok("App Installed Successfully!");
-    } catch (RuntimeException exception) {
-      return ResponseEntity.badRequest().body("Error: " + exception.getMessage());
-    }
+    appService.installApp(userId, appId);
+    logger.info("App {} installed successfully for User {}.", appId, userId);
+
+    return ResponseEntity.ok("App Installed Successfully!");
   }
 
-  /**
-   * Uninstalls an application for a specific user.
-   *
-   * @param userId the ID of the user uninstalling the app
-   * @param appId the ID of the app being uninstalled
-   * @return the success message upon uninstallation
-   */
+  /** Uninstalls an application for a specific user. */
   @PostMapping("/uninstall")
-  public ResponseEntity<String> unInstallApp(
+  public ResponseEntity<String> uninstallApp(
       @RequestParam final int userId, @RequestParam final int appId) {
+    logger.info("Request received: User {} uninstalling App {}", userId, appId);
 
-    try {
-      appService.unInstallApp(userId, appId);
-      return ResponseEntity.ok("App Uninstalled Successfully!");
-    } catch (RuntimeException exception) {
-      return ResponseEntity.badRequest().body("Error: " + exception.getMessage());
-    }
+    appService.uninstallApp(userId, appId);
+    logger.info("App {} uninstalled successfully for User {}.", appId, userId);
+
+    return ResponseEntity.ok("App Uninstalled Successfully!");
   }
 
-  /**
-   * Submits a review and rating for an application.
-   *
-   * @param review the review object containing user ID, app ID, rating, and comment
-   * @return the success message if the review is added
-   */
+  /** Submits a review and rating for an application. */
   @PostMapping("/review")
-  public ResponseEntity<String> writeReview(@RequestBody final Review review) {
+  public ResponseEntity<String> writeReview(@Valid @RequestBody final Review review) {
+    logger.info("Request received: Review for App ID {}", review.getAppId());
 
-    try {
-      appService.writeReview(review);
-      return ResponseEntity.ok("Review Added Successfully!");
-    } catch (RuntimeException exception) {
-      return ResponseEntity.badRequest().body("Error: " + exception.getMessage());
-    }
+    appService.writeReview(review);
+    logger.info("Review added successfully for App ID {}.", review.getAppId());
+
+    return ResponseEntity.ok("Review Added Successfully!");
   }
 }

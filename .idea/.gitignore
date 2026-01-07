@@ -1,3 +1,23 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+
+# Logs
+logs/
+*.log
+
+# Build Output
+target/
+*.class
+*.war
+*.ear
+*.jar
+
+# IDE
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+.vscode/
+bin/

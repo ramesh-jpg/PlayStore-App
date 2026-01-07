@@ -4,26 +4,26 @@ import java.util.Collection;
 import org.src.model.App;
 
 /**
- * Defines operations for generating reports and viewing application statistics.
+ * Service interface for generating reports and viewing application statistics.
  *
- * <p>This interface focuses on data retrieval and analysis, such as listing installed applications
- * and calculating installation metrics.
+ * <p>Focuses on data retrieval and analysis, such as listing user-installed apps and calculating
+ * installation metrics for authors.
  */
 public interface AppStaticsService {
 
   /**
    * Retrieves a list of all applications currently installed by a specific user.
    *
-   * @param userId the unique identifier of the user
-   * @return a collection of {@link App} objects installed by the user
+   * @param userId the unique identifier of the user.
+   * @return a collection of {@link App} objects installed by the user.
    */
-  Collection<App> showInstalledApps(int userId);
+  Collection<App> showInstalledApps(final int userId);
 
   /**
    * Calculates the total number of installations for a specific author.
    *
-   * @param authorName the name of the author to calculate stats for
-   * @return the total count of installations across all apps owned by the author
+   * @param authorName the name of the author.
+   * @return the total count of installations across all apps owned by the author.
    */
-  int countInstallByAuthor(String authorName);
+  int countInstallsByAuthor(final String authorName);
 }

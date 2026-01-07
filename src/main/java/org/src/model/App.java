@@ -1,5 +1,10 @@
 package org.src.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.NotEmpty;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,24 +15,35 @@ import java.util.Objects;
  * associated reviews.
  */
 public final class App {
+  private int id;
 
-  private int appId;
+  @NotBlank(message = "App name is required")
   private String name;
+
+  @NotNull(message = "Author information is required")
   private User author;
+
+  @NotBlank(message = "Description cannot be empty")
+  @Size(max = 200, message = "Description must not exceed 200 characters")
   private String description;
+
+  @Positive(message = "Version must be a positive number")
   private double version;
+
+  @NotEmpty(message = "Features list cannot be empty.")
   private List<String> features;
+
   private double rating = 0;
   private int installedCount = 0;
   private List<Review> reviews;
 
   /** Default constructor required by Jackson for JSON deserialization. */
-  public App() {}
+  public App() { }
 
   /**
    * Constructs a new App with specific details.
    *
-   * @param appId Unique identifier for the app.
+   * @param id Unique identifier for the app.
    * @param name Name of the Application.
    * @param author Author of the application.
    * @param description Short description of the app.
@@ -37,15 +53,11 @@ public final class App {
    * @param installedCount Total number of installations.
    */
   public App(
-      final int appId,
-      final String name,
-      User author,
-      final String description,
-      final double version,
-      final List<String> features,
-      final double rating,
-      final int installedCount) {
-    this.appId = appId;
+      final int id, final String name,
+      User author, final String description,
+      final double version, final List<String> features,
+      final double rating, final int installedCount) {
+    this.id = id;
     this.name = name;
     this.author = author;
     this.description = description;
@@ -59,23 +71,23 @@ public final class App {
     return name;
   }
 
-  public void setName(String name) {
+  public void setName(final String name) {
     this.name = name;
   }
 
-  public int getAppId() {
-    return appId;
+  public int getId() {
+    return id;
   }
 
-  public void setAppId(int appId) {
-    this.appId = appId;
+  public void setId(final int id) {
+    this.id = id;
   }
 
   public User getAuthor() {
     return author;
   }
 
-  public void setAuthor(User author) {
+  public void setAuthor(final User author) {
     this.author = author;
   }
 
@@ -92,7 +104,7 @@ public final class App {
     return description;
   }
 
-  public void setDescription(String description) {
+  public void setDescription(final String description) {
     this.description = description;
   }
 
@@ -100,7 +112,7 @@ public final class App {
     return version;
   }
 
-  public void setVersion(double version) {
+  public void setVersion(final double version) {
     this.version = version;
   }
 
@@ -116,7 +128,7 @@ public final class App {
     return rating;
   }
 
-  public void setRating(double rating) {
+  public void setRating(final double rating) {
     this.rating = rating;
   }
 
@@ -124,7 +136,7 @@ public final class App {
     return installedCount;
   }
 
-  public void setInstalledCount(int installedCount) {
+  public void setInstalledCount(final int installedCount) {
     this.installedCount = installedCount;
   }
 
@@ -132,42 +144,39 @@ public final class App {
     return reviews;
   }
 
-  public void setReviews(List<Review> reviews) {
+  public void setReviews(final List<Review> reviews) {
     this.reviews = reviews;
   }
 
   @Override
   public String toString() {
-    String authorName = (author != null) ? author.getUsername() : "Unknown";
+    final String authorName = (author != null) ? author.getUsername() : "Unknown";
     return "App{"
-        + "id="
-        + appId
-        + ", name='"
-        + name
-        + '\''
-        + ", authorName='"
-        + authorName
-        + '\''
-        + ", description='"
-        + description
-        + '\''
-        + ", version="
-        + version
-        + ", rating="
-        + rating
+        + "id=" + id
+        + ", name='" + name + '\'' +
+        ", authorName='" + authorName + '\''
+        + ", description='" + description + '\''
+        + ", version=" + version
+        + ", rating=" + rating
         + '}';
   }
 
   @Override
-  public boolean equals(Object object) {
-    if (this == object) return true;
-    if (object == null || getClass() != object.getClass()) return false;
-    App app = (App) object;
-    return appId == app.appId;
+  public boolean equals(final Object object) {
+    if (this == object) {
+      return true;
+    }
+    if (object == null || getClass() != object.getClass()) {
+      return false;
+    }
+
+    final App app = (App) object;
+
+    return id == app.id;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(appId);
+    return Objects.hashCode(id);
   }
 }

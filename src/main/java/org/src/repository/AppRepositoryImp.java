@@ -26,14 +26,14 @@ import java.util.Collection;
     @Override
     public App findById(final int id) {
         return storage.stream()
-                .filter(app -> app.getAppId() == id)
+                .filter(app -> app.getId() == id)
                 .findFirst()
                 .orElse(null);
     }
 
     @Override
     public void update(final App app) {
-        final App existingApp = findById(app.getAppId());
+        final App existingApp = findById(app.getId());
 
         if (existingApp == null) {
             return;
@@ -46,7 +46,7 @@ import java.util.Collection;
 
     @Override
     public boolean delete(final int id) {
-        return storage.removeIf(app -> app.getAppId() == id);
+        return storage.removeIf(app -> app.getId() == id);
     }
 
     @Override
