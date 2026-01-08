@@ -47,12 +47,13 @@ public class AppRepositoryImpl implements AppRepository {
         statement.setInt(5, 0);
         statement.setInt(6, app.getAuthor().getId());
 
-        try (ResultSet resultSet = statement.executeQuery()) {
+        try (final ResultSet resultSet = statement.executeQuery()) {
           if (resultSet.next()) {
             final int appId = resultSet.getInt("id");
 
             if (app.getFeatures() != null && !app.getFeatures().isEmpty()) {
-              try (PreparedStatement preparedStatement = connection.prepareStatement(insertFeatures)) {
+              try (final PreparedStatement preparedStatement =
+                  connection.prepareStatement(insertFeatures)) {
                 for (String feature : app.getFeatures()) {
                   preparedStatement.setInt(1, appId);
                   preparedStatement.setString(2, feature.trim());
@@ -87,12 +88,13 @@ public class AppRepositoryImpl implements AppRepository {
         }
       }
     }
-}
+  }
 
   /** Finds an App by its unique ID. */
   @Override
   public Optional<App> findById(final int id) {
-    final String findApp = "SELECT a.*, u.username, u.role FROM app a "
+    final String findApp =
+        "SELECT a.*, u.username, u.role FROM app a "
             + "JOIN users u ON a.author_id = u.id "
             + "WHERE a.id = ?";
 
@@ -104,23 +106,25 @@ public class AppRepositoryImpl implements AppRepository {
         if (resultSet.next()) {
           final List<String> features = getAppFeatures(connection, id);
 
-          final User author = new User(
-              resultSet.getInt("author_id"),
-              resultSet.getString("username"),
-              null,
-              null,
-              0,
-              resultSet.getString("role"));
+          final User author =
+              new User(
+                  resultSet.getInt("author_id"),
+                  resultSet.getString("username"),
+                  null,
+                  null,
+                  0,
+                  resultSet.getString("role"));
 
-          return Optional.of(new App(
-              resultSet.getInt("id"),
-              resultSet.getString("name"),
-              author,
-              resultSet.getString("description"),
-              resultSet.getDouble("version"),
-              features,
-              resultSet.getDouble("rating"),
-              resultSet.getInt("installed_count")));
+          return Optional.of(
+              new App(
+                  resultSet.getInt("id"),
+                  resultSet.getString("name"),
+                  author,
+                  resultSet.getString("description"),
+                  resultSet.getDouble("version"),
+                  features,
+                  resultSet.getDouble("rating"),
+                  resultSet.getInt("installed_count")));
         }
       }
     } catch (final SQLException exception) {
@@ -163,7 +167,8 @@ public class AppRepositoryImpl implements AppRepository {
           connection.rollback();
           logger.warn("Transaction rollback for App ID: {}", app.getId());
         } catch (final SQLException sqlException) {
-          logger.error("Error during rollback for App ID {}: {}", app.getId(), sqlException.getMessage());
+          logger.error(
+              "Error during rollback for App ID {}: {}", app.getId(), sqlException.getMessage());
         }
       }
 
@@ -210,8 +215,8 @@ public class AppRepositoryImpl implements AppRepository {
   @Override
   public Collection<App> getAll() {
     final Collection<App> apps = new ArrayList<>();
-    final String getAllQuery = "SELECT a.*, u.username, u.role FROM app a "
-        + "JOIN users u ON a.author_id = u.id";
+    final String getAllQuery =
+        "SELECT a.*, u.username, u.role FROM app a " + "JOIN users u ON a.author_id = u.id";
 
     try (final Connection connection = appDataSource.getConnection();
         final Statement statement = connection.createStatement();
@@ -220,16 +225,23 @@ public class AppRepositoryImpl implements AppRepository {
         int appId = resultSet.getInt("id");
         final List<String> features = getAppFeatures(connection, appId);
 
-        User author = new User(
+        final User author =
+            new User(
                 resultSet.getInt("author_id"),
                 resultSet.getString("username"),
-                null, null, 0,
+                null,
+                null,
+                0,
                 resultSet.getString("role"));
 
-        apps.add(new App(
-                appId, resultSet.getString("name"),
-                author, resultSet.getString("description"),
-                resultSet.getDouble("version"), features,
+        apps.add(
+            new App(
+                appId,
+                resultSet.getString("name"),
+                author,
+                resultSet.getString("description"),
+                resultSet.getDouble("version"),
+                features,
                 resultSet.getDouble("rating"),
                 resultSet.getInt("installed_count")));
       }
@@ -275,7 +287,8 @@ public class AppRepositoryImpl implements AppRepository {
         }
       }
 
-      logger.error("Error adding review for App ID {}: {}", review.getAppId(), exception.getMessage());
+      logger.error(
+          "Error adding review for App ID {}: {}", review.getAppId(), exception.getMessage());
     } finally {
       if (connection != null) {
         try {
@@ -304,9 +317,7 @@ public class AppRepositoryImpl implements AppRepository {
     return features;
   }
 
-  /**
-   * Updates features for an App by deleting old ones and inserting new ones.
-   */
+  /** Updates features for an App by deleting old ones and inserting new ones. */
   private void updateFeatures(
       final Connection connection, final int appId, final List<String> newFeatures)
       throws SQLException {
@@ -330,9 +341,7 @@ public class AppRepositoryImpl implements AppRepository {
     }
   }
 
-  /**
-   * Calculates the average rating from the reviews table and updates the app table.
-   */
+  /** Calculates the average rating from the reviews table and updates the app table. */
   private void updateRating(final Connection connection, final int appId) throws SQLException {
     final String updateReviewsTable = "SELECT AVG(rating) FROM reviews WHERE app_id = ?";
     final String updateAppTable = "UPDATE app SET rating = ? WHERE id = ?";
@@ -351,6 +360,4 @@ public class AppRepositoryImpl implements AppRepository {
       statement.executeUpdate();
     }
   }
-
 }
-

@@ -12,7 +12,6 @@ import org.src.model.Review;
 import org.src.repository.AppRepository;
 import org.src.repository.InstallationRepository;
 
-
 /**
  * Implementation of the application management services.
  *

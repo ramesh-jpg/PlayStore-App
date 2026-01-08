@@ -1,8 +1,7 @@
 package org.src.repository;
 
-import org.src.model.User;
-
 import java.util.Optional;
+import org.src.model.User;
 
 /**
  * Defines the contract for User data management.

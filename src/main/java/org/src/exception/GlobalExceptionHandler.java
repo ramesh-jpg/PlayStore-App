@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /**
  * Global exception handler to intercept and format all application-level exceptions.
  *
- * <p>This class ensures that the client receives a consistent JSON response format
- * of the error type.
+ * <p>This class ensures that the client receives a consistent JSON response format of the error
+ * type.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
   private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-  /** Handles cases where a user has an incorrect role for an operation.*/
+  /** Handles cases where a user has an incorrect role for an operation. */
   @ExceptionHandler(InvalidRoleException.class)
   public ResponseEntity<Map<String, Object>> handleInvalidRole(
       final InvalidRoleException roleException) {
@@ -29,10 +29,10 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.FORBIDDEN, roleException.getMessage());
   }
 
-  /** Handles unauthorized access attempts (e.g. wrong password).*/
+  /** Handles unauthorized access attempts (e.g. wrong password). */
   @ExceptionHandler(UnauthorizedException.class)
   public ResponseEntity<Map<String, Object>> handleUnauthorized(
-      final UnauthorizedException unauthorizedException){
+      final UnauthorizedException unauthorizedException) {
     logger.warn("Unauthorized Access : {}", unauthorizedException.getMessage());
 
     return buildResponse(HttpStatus.UNAUTHORIZED, unauthorizedException.getMessage());
