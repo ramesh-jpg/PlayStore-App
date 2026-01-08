@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.sql.DataSource;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,27 +42,28 @@ public class InstallationRepositoryImpl implements InstallationRepository {
     final String insertQuery = "INSERT INTO installation (user_id, app_id) VALUES (?, ?)";
     final String updateQuery = "UPDATE app SET installed_count = installed_count + 1 WHERE id = ?";
 
-    try (final Connection connection = appDataSource.getConnection()){
+    try (final Connection connection = appDataSource.getConnection()) {
       connection.setAutoCommit(false);
-       try (final PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
-        final PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
-      // Add to installation table
-      insertStatement.setInt(1, userId);
-      insertStatement.setInt(2, appId);
-      insertStatement.executeUpdate();
-      // Increment count in app table
-      updateStatement.setInt(1, appId);
-      updateStatement.executeUpdate();
+      try (final PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
+          final PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+        // Add to installation table
+        insertStatement.setInt(1, userId);
+        insertStatement.setInt(2, appId);
+        insertStatement.executeUpdate();
+        // Increment count in app table
+        updateStatement.setInt(1, appId);
+        updateStatement.executeUpdate();
 
-      connection.commit();
-      logger.info("Successfully installed App ID {}", appId);
+        connection.commit();
+        logger.info("Successfully installed App ID {}", appId);
 
-      return true;
-    } catch (final SQLException exception) {
-         connection.rollback();
-         logger.error("Installation failed for User {} App {}: {}", userId, appId, exception.getMessage());
-         return false;
-       }
+        return true;
+      } catch (final SQLException exception) {
+        connection.rollback();
+        logger.error(
+            "Installation failed for User {} App {}: {}", userId, appId, exception.getMessage());
+        return false;
+      }
     } catch (final SQLException exception) {
       logger.error("DataBase Connection error during installation: {}", exception.getMessage());
       return false;
@@ -82,27 +82,27 @@ public class InstallationRepositoryImpl implements InstallationRepository {
     final String deleteQuery = "DELETE FROM installation WHERE user_id = ? AND app_id = ?";
     final String updateQuery = "UPDATE app SET installed_count = installed_count - 1 WHERE id = ?";
 
-    try (final Connection connection = appDataSource.getConnection()){
+    try (final Connection connection = appDataSource.getConnection()) {
       connection.setAutoCommit(false);
       try (final PreparedStatement deleteStatement = connection.prepareStatement(deleteQuery);
-        final PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
-      deleteStatement.setInt(1, userId);
-      deleteStatement.setInt(2, appId);
-      final int rowsDeleted = deleteStatement.executeUpdate();
+          final PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+        deleteStatement.setInt(1, userId);
+        deleteStatement.setInt(2, appId);
+        final int rowsDeleted = deleteStatement.executeUpdate();
 
-      if (rowsDeleted > 0) {
-        updateStatement.setInt(1, appId);
-        updateStatement.executeUpdate();
-        connection.commit();
-        logger.info("Successfully uninstalled By App ID {}", appId);
+        if (rowsDeleted > 0) {
+          updateStatement.setInt(1, appId);
+          updateStatement.executeUpdate();
+          connection.commit();
+          logger.info("Successfully uninstalled By App ID {}", appId);
 
-        return true;
-      } else {
-        connection.rollback();
-        return false;
-      }
+          return true;
+        } else {
+          connection.rollback();
+          return false;
+        }
 
-    } catch (final SQLException exception) {
+      } catch (final SQLException exception) {
         connection.rollback();
         logger.error("Uninstall error for App {}: {}", appId, exception.getMessage());
         return false;
@@ -161,30 +161,33 @@ public class InstallationRepositoryImpl implements InstallationRepository {
         final PreparedStatement statement = connection.prepareStatement(installQuery)) {
       statement.setInt(1, userId);
 
-    try (final ResultSet resultSet = statement.executeQuery()){
-      while (resultSet.next()) {
-        final User author =
-            new User(
-                resultSet.getInt("author_id"),
-                resultSet.getString("username"),
-                null, null, 0,
-                resultSet.getString("role"));
+      try (final ResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
+          final User author =
+              new User(
+                  resultSet.getInt("author_id"),
+                  resultSet.getString("username"),
+                  null,
+                  null,
+                  0,
+                  resultSet.getString("role"));
 
-        final App app = new App(
-            resultSet.getInt("id"),
-            resultSet.getString("name"),
-            author,
-            resultSet.getString("description"),
-            resultSet.getDouble("version"),
-            new ArrayList<>(),
-            resultSet.getDouble("rating"),
-            resultSet.getInt("installed_count"));
+          final App app =
+              new App(
+                  resultSet.getInt("id"),
+                  resultSet.getString("name"),
+                  author,
+                  resultSet.getString("description"),
+                  resultSet.getDouble("version"),
+                  new ArrayList<>(),
+                  resultSet.getDouble("rating"),
+                  resultSet.getInt("installed_count"));
 
-        installedApps.add(app);
-       }
-    }
+          installedApps.add(app);
+        }
+      }
 
-    logger.info("Fetched {} installed apps for user ID {}", installedApps.size(), userId);
+      logger.info("Fetched {} installed apps for user ID {}", installedApps.size(), userId);
     } catch (final SQLException exception) {
       logger.error("Error fetching installed apps for : {}", exception.getMessage());
     }

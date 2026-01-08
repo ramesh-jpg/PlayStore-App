@@ -5,8 +5,8 @@ import org.src.model.User;
 /**
  * Defines the contract for user authentication and account management.
  *
- * <p>Outlines essential operations for users, such as registration (sign-up) and
- * authentication (sign-in).
+ * <p>Outlines essential operations for users, such as registration (sign-up) and authentication
+ * (sign-in).
  */
 public interface UserService {
 

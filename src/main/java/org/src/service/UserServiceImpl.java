@@ -58,29 +58,32 @@ public class UserServiceImpl implements UserService {
       userRepository.save(user);
       logger.info("Signup successfully for User '{}'", user.getUsername());
     } catch (final RuntimeException exception) {
-      handleDatabaseError(exception,user);
+      handleDatabaseError(exception, user);
     }
   }
 
- /**
-  * Authenticates a user by verifying the username and password.
-  *
-  * @return the authenticated {@link User} object.
+  /**
+   * Authenticates a user by verifying the username and password.
+   *
+   * @return the authenticated {@link User} object.
    */
   @Override
   public User signIn(final String username, final String password) {
     logger.info("Login for username: {}", username);
 
-    final User user = userRepository.getByUsername(username)
-        .orElseThrow(() -> {
-          logger.warn("Login failed: Username '{}' not found.", username);
-          return new RuntimeException("Username Not Found.");
-        });
+    final User user =
+        userRepository
+            .getByUsername(username)
+            .orElseThrow(
+                () -> {
+                  logger.warn("Login failed: Username '{}' not found.", username);
+                  return new RuntimeException("Username Not Found.");
+                });
 
     if (user.getPassword().equals(password)) {
       return user;
     } else {
-      logger.error("Login failed for incorrect Password" );
+      logger.error("Login failed for incorrect Password");
       throw new UnauthorizedException("Wrong PassWord. ");
     }
   }
