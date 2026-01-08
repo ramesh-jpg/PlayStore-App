@@ -13,9 +13,9 @@ import org.src.model.Review;
 import org.src.service.AppService;
 
 /**
- * REST Controller for managing applications in the PlayStore.
+ * REST Controller for managing applications in the PlayStore
  *
- ** <p>Handles CRUD operations, installations, and reviews by interacting with {@link AppService}.
+ * <p>Handles CRUD operations, installations, and reviews by interacting with {@link AppService}.
  */
 @RestController
 @RequestMapping("/api/apps")

@@ -1,7 +1,6 @@
 package org.src.service;
 
 import java.util.Collection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +23,8 @@ public class AppStaticsServiceImpl implements AppStaticsService {
 
   /** Constructs the service with required repository dependencies. */
   @Autowired
-  public AppStaticsServiceImpl(final AppRepository appRepository,
-                               final InstallationRepository installationRepository) {
+  public AppStaticsServiceImpl(
+      final AppRepository appRepository, final InstallationRepository installationRepository) {
     this.appRepository = appRepository;
     this.installationRepository = installationRepository;
   }
