@@ -4,7 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.src.model.User;
@@ -12,31 +15,27 @@ import org.src.model.User;
 /**
  * SQL implementation of the {@link UserRepository} interface.
  *
- * <p>This class uses JDBC to connect to the 'users' table in the database. It handles SQL queries
- * for Sign-up and Sign-in operations.
+ * <p>Handles user authentication and registration data access using JDBC.
  */
 @Repository
 public class UserRepositoryImpl implements UserRepository {
-
-  private final DataSource dataSource;
+  private static final Logger logger = LoggerFactory.getLogger(UserRepositoryImpl.class);
+  private final DataSource appDataSource;
 
   @Autowired
-  public UserRepositoryImpl(final DataSource dataSource) {
-    this.dataSource = dataSource;
+  public UserRepositoryImpl(final DataSource appDataSource) {
+    this.appDataSource = appDataSource;
   }
 
   /**
    * Inserts a new user record into the database.
    *
-   * <p>SQL: {@code INSERT INTO users (username, password, email, phone, role) VALUES ...}
-   *
-   * @param user the {@link User} object containing details to be saved
-   * @throws RuntimeException if a database access error occurs
+   * @param user the {@link User} object containing details to be saved.
    */
   @Override
   public void save(final User user) {
-    try (final Connection connection = dataSource.getConnection();
-        final PreparedStatement statement =
+    try (final Connection connection = appDataSource.getConnection();
+         final PreparedStatement statement =
             connection.prepareStatement(
                 "INSERT INTO users(username,password,email,phone,role) VALUES (?,?,?,?,?)")) {
       statement.setString(1, user.getUsername());
@@ -45,38 +44,46 @@ public class UserRepositoryImpl implements UserRepository {
       statement.setLong(4, user.getPhone());
       statement.setString(5, user.getRole());
       statement.executeUpdate();
+
+      logger.info("User '{}' registered successfully in Database.", user.getUsername());
+
     } catch (SQLException exception) {
-      throw new RuntimeException(exception.getMessage());
+      logger.error("Database error while saving user '{}': {}",
+          user.getUsername(), exception.getMessage());
     }
   }
 
   /**
    * Retrieves a user record based on the username.
    *
-   * <p>SQL: {@code SELECT * FROM users WHERE username = ?}
-   *
-   * @param username the username to search for
-   * @return the {@link User} object if found, otherwise {@code null}
+   * @param username the username to search for.
+   * @return an {@link Optional} containing the user if found, otherwise empty.
    */
   @Override
-  public User getByUsername(final String username) {
-    try (final Connection connection = dataSource.getConnection();
-        final PreparedStatement statement =
+  public Optional<User> getByUsername(final String username) {
+    try (final Connection connection = appDataSource.getConnection();
+         final PreparedStatement statement =
             connection.prepareStatement("SELECT * FROM users WHERE username=?")) {
       statement.setString(1, username);
-      final ResultSet result = statement.executeQuery();
-      if (result.next())
-        return new User(
-            result.getInt(1),
-            result.getString(2),
-            result.getString(3),
-            result.getString(4),
-            result.getLong(5),
-            result.getString(6));
-    } catch (final SQLException exception) {
-      exception.printStackTrace();
+
+    try (final ResultSet result = statement.executeQuery()){
+      if (result.next()){
+        return Optional.of(new User(
+            result.getInt("id"),
+            result.getString("username"),
+            result.getString("password"),
+            result.getString("email"),
+            result.getLong("phone"),
+            result.getString("role")));
+      }
     }
 
-    return null;
+      logger.warn("User search failed: Username '{}' not found in database.", username);
+    }
+    catch (final SQLException exception) {
+      logger.error("DataBase error while fetching user '{}': {}", username, exception.getMessage());
+    }
+
+    return Optional.empty();
   }
 }

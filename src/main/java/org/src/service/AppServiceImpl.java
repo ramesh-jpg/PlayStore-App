@@ -1,8 +1,12 @@
 package org.src.service;
 
 import java.util.Collection;
+import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.src.exception.InvalidRoleException;
 import org.src.model.App;
 import org.src.model.Review;
 import org.src.repository.AppRepository;
@@ -11,23 +15,16 @@ import org.src.repository.InstallationRepository;
 /**
  * Implementation of the application management services.
  *
- * <p>This class serves as the central logic layer, implementing the {@link AppService} interface to
- * handle administrative tasks, user interactions, and validation logic.
+ * <p>Central logic layer for handling administrative tasks, user interactions, and validation.
  */
 @Service
 public class AppServiceImpl implements AppService {
+  private static final Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
   private final AppRepository appRepository;
   private final InstallationRepository installationRepository;
 
-  /**
-   * Constructs the AppServiceImpl with necessary repository dependencies.
-   *
-   * <p>Constructor injection is used here
-   *
-   * @param appRepository the repository for App data operations
-   * @param installationRepository the repository for Installation data operations
-   */
+  /** Constructs AppServiceImpl with necessary repository dependencies. */
   @Autowired
   public AppServiceImpl(final AppRepository appRepository,
                         final InstallationRepository installationRepository) {
@@ -35,42 +32,27 @@ public class AppServiceImpl implements AppService {
     this.installationRepository = installationRepository;
   }
 
-  /**
-   * Creates a new application after validating author permissions.
-   *
-   * @param app the app details to be saved
-   * @throws RuntimeException if the author is missing or lacks the 'AUTHOR' role
-   */
+  /** Creates a new application after validating author permissions. */
   @Override
   public void createApp(final App app) {
-    if (app.getAuthor() == null) {
-      throw new RuntimeException("Author details missing.");
-    }
+    Objects.requireNonNull(app.getAuthor(), "Author details missing.");
 
     if (!"AUTHOR".equalsIgnoreCase(app.getAuthor().getRole())) {
-      throw new RuntimeException("Only AUTHOR can create apps.");
+      throw new InvalidRoleException("Only AUTHOR can create apps.");
     }
 
     appRepository.save(app);
+    logger.info("New app '{}' created successfully.", app.getName());
   }
 
-  /**
-   * Updates an existing application's details.
-   *
-   * <p>Validates that the app exists and the requester matches the original author.
-   *
-   * @param app the app object with updated details
-   * @throws RuntimeException if the app is not found or the user is unauthorized
-   */
+  /** Updates an existing application's details. */
   @Override
   public void updateApp(final App app) {
-    final App existingApp = appRepository.findById(app.getAppId());
+    final App existingApp =
+        appRepository.findById(app.getId())
+            .orElseThrow(() -> new RuntimeException("App not found "));
 
-    if (existingApp == null) {
-      throw new RuntimeException("App not found. ");
-    }
-
-    if (existingApp.getAuthor().getUserId() != app.getAuthor().getUserId()) {
+    if (existingApp.getAuthor().getId() != app.getAuthor().getId()) {
       throw new RuntimeException(" You are not allowed Update this app.");
     }
 
@@ -80,102 +62,72 @@ public class AppServiceImpl implements AppService {
     existingApp.setVersion(app.getVersion());
 
     appRepository.update(existingApp);
+    logger.info("App ID {} updated successfully.", app.getId());
   }
 
-  /**
-   * Deletes an application from the store.
-   *
-   * @param appId the ID of the app to delete
-   * @param authorId the ID of the author requesting deletion
-   * @throws RuntimeException if validation fails
-   */
+  /** Deletes an application from the store. */
   @Override
   public void deleteApp(final int appId, final int authorId) {
-    final App existingApp = appRepository.findById(appId);
-    if (existingApp == null) {
-      throw new RuntimeException("App not found.");
-    }
+    final App existingApp = appRepository.findById(appId)
+        .orElseThrow(() -> new RuntimeException("App not found "));
 
-    if (existingApp.getAuthor().getUserId() != authorId) {
+    if (existingApp.getAuthor().getId() != authorId) {
       throw new RuntimeException("You are not allowed delete this app.");
     }
 
     appRepository.delete(appId);
+    logger.info("App ID {} deleted by Author ID {}.", appId, authorId);
   }
 
-  /**
-   * Lists all available applications in the repository.
-   *
-   * @return a collection of all apps
-   */
+  /** Lists all available applications in the repository. */
   @Override
   public Collection<App> listApps() {
     return appRepository.getAll();
   }
 
-  /**
-   * Installs an application by ID.
-   *
-   * @param userId the ID of the user
-   * @param appId the ID of the app
-   * @throws RuntimeException if the app is invalid or already installed
-   */
+  /** Installs an application for a user. */
   @Override
   public void installApp(final int userId, final int appId) {
-    final App app = appRepository.findById(appId);
-    if (app == null) {
-      throw new RuntimeException("App not found. ");
-    }
+    appRepository.findById(appId)
+        .orElseThrow(() -> new RuntimeException("App not found."));
 
     if (installationRepository.isInstalled(userId, appId)) {
       throw new RuntimeException("Already installed.");
     }
 
     installationRepository.installed(userId, appId);
+    logger.info("App ID {} installed for User ID {}.", appId, userId);
   }
 
-  /**
-   * Uninstalls an application.
-   *
-   * @param userId the ID of the user
-   * @param appId the ID of the app
-   * @throws RuntimeException if the app is not currently installed
-   */
+  /** Uninstalls an application. */
   @Override
-  public void unInstallApp(final int userId, final int appId) {
-    final App app = appRepository.findById(appId);
-
-    if (app == null) {
-      throw new RuntimeException("App not found. ");
-    }
+  public void uninstallApp(final int userId, final int appId) {
+    appRepository.findById(appId)
+        .orElseThrow(() -> new RuntimeException("App not found."));
 
     if (!installationRepository.isInstalled(userId, appId)) {
       throw new RuntimeException("App is not installed in this account.");
     }
 
-    boolean success = installationRepository.unInstalled(userId, appId);
-
+    final boolean success = installationRepository.uninstalled(userId, appId);
     if (!success) {
       throw new RuntimeException("Uninstall Failed due to server error.");
     }
+
+    logger.info("App ID {} uninstalled for User ID {}.", appId, userId);
   }
 
-  /**
-   * Submits a user review for an application.
-   *
-   * @param review the review object containing rating and comment
-   * @throws RuntimeException if the app ID is invalid or rating is out of range
-   */
+  /** Submits a user review for an application. */
   @Override
   public void writeReview(final Review review) {
-    if (appRepository.findById(review.getAppId()) == null) {
-      throw new RuntimeException("App not found with ID: " + review.getAppId());
-    }
+    appRepository.findById(review.getAppId())
+        .orElseThrow(() -> new RuntimeException("App not found with ID: " + review.getAppId()));
 
-    if (review.getRating() < 1 || review.getRating() > 5) {
+    if (review.getRating() < Review.MIN_RATING|| review.getRating() > Review.MAX_RATING) {
       throw new RuntimeException("Rating must be between 1 and 5.");
     }
 
     appRepository.addReview(review);
+    logger.info("Review added for App ID {} by User ID {}.", review.getAppId(), review.getUserId());
   }
 }

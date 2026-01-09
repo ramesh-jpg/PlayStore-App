@@ -1,5 +1,8 @@
 package org.src.controller;
 
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,67 +16,48 @@ import org.src.service.UserService;
 /**
  * REST Controller for managing user accounts and authentication.
  *
- * <p>This controller provides endpoints for user registration (sign-up) and authentication
- * (sign-in). It delegates business logic to the {@link UserService}.
+ * <p>Handles user registration (sign-up) and authentication (sign-in) via {@link UserService}.
  */
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public final class UserController {
+  private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
   private final UserService userService;
 
-  /**
-   * Constructs the UserController with the required service dependency.
-   *
-   * <p>Constructor injection ensures that the controller is initialized with a valid {@link
-   * UserService}
-   *
-   * @param userService the service responsible for user management logic
-   */
+  /** Constructs the UserController with the required service dependency. */
   @Autowired
   public UserController(final UserService userService) {
     this.userService = userService;
   }
 
   /**
-   * Registers a new user in the system.
+   * Registers a new user in the application.
    *
-   * <p>This endpoint accepts a user object, validates it via the service layer, and persists it to
-   * the database.
-   *
-   * @param user the user object containing details like username, password, and role
-   * @return a {@link ResponseEntity} with a success message if created, or an error message if the
-   *     request is invalid
+   * @param user the user details for registration.
    */
   @PostMapping("/signup")
-  public ResponseEntity<String> signUp(@RequestBody final User user) {
+  public ResponseEntity<String> signUp(@Valid @RequestBody final User user) {
+    logger.info("Signup request received for Username: {}", user.getUsername());
 
-    try {
-      userService.signUp(user);
-      return ResponseEntity.ok("Signup Successful! ");
-    } catch (RuntimeException exception) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body(" Error: " + exception.getMessage());
-    }
+    userService.signUp(user);
+    logger.info("User '{}' registered successfully.", user.getUsername());
+
+    return ResponseEntity.status(HttpStatus.CREATED).body("Signup Successful!");
   }
 
   /**
    * Authenticates a user based on provided credentials.
    *
-   * <p>This endpoint checks the username and password. If valid, it returns the full user details
-   *
-   * @param loginDetails a user object containing only the username and password for login
-   * @return a {@link ResponseEntity} containing the {@link User} object if successful, or an
-   *     "Unauthorized" error message if authentication fails
+   * @param loginDetails user object containing username and password.
    */
   @PostMapping("/login")
-  public ResponseEntity<?> signIn(@RequestBody final User loginDetails) {
+  public ResponseEntity<User> signIn(@Valid @RequestBody final User loginDetails) {
+    logger.info("Login for Username: {}", loginDetails.getUsername());
 
-    try {
-      final User user = userService.signIn(loginDetails.getUsername(), loginDetails.getPassword());
-      return ResponseEntity.ok(user);
-    } catch (final RuntimeException exception) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-          .body(" Login Failed: " + exception.getMessage());
-    }
+    final User user = userService.signIn(loginDetails.getUsername(), loginDetails.getPassword());
+    logger.info("Login successful for User: {}", user.getUsername());
+
+    return ResponseEntity.ok(user);
   }
 }

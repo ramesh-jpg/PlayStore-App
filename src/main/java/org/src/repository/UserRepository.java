@@ -1,5 +1,6 @@
 package org.src.repository;
 
+import java.util.Optional;
 import org.src.model.User;
 
 /**
@@ -15,7 +16,7 @@ public interface UserRepository {
    *
    * @param user the {@link User} object containing username, password, and other details
    */
-  void save(User user);
+  void save(final User user);
 
   /**
    * Finds a User by their unique username.
@@ -23,7 +24,7 @@ public interface UserRepository {
    * <p>This method is primarily used during the login process to verify credentials.
    *
    * @param username the username to search for
-   * @return the {@link User} object if found, or {@code null} if no match exists
+   * @return an {@link Optional} containing the User if found, or empty if not found
    */
-  User getByUsername(String username);
+  Optional<User> getByUsername(final String username);
 }

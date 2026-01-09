@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.src.model.App;
@@ -15,18 +17,17 @@ import org.src.model.User;
 /**
  * Implementation of the {@link InstallationRepository} interface.
  *
- * <p>This class handles the database operations for tracking user installations. It manages the
- * relationship between Users and Apps in the 'installation' table and updates the installation
- * counts in the 'app' table.
+ * <p>Manages user-app relationships in the 'installation' table and updates app install counts.
  */
 @Repository
 public class InstallationRepositoryImpl implements InstallationRepository {
+  private static final Logger logger = LoggerFactory.getLogger(InstallationRepositoryImpl.class);
 
-  private final DataSource dataSource;
+  private final DataSource appDataSource;
 
   @Autowired
-  public InstallationRepositoryImpl(final DataSource dataSource) {
-    this.dataSource = dataSource;
+  public InstallationRepositoryImpl(final DataSource appDataSource) {
+    this.appDataSource = appDataSource;
   }
 
   /**
@@ -41,23 +42,30 @@ public class InstallationRepositoryImpl implements InstallationRepository {
     final String insertQuery = "INSERT INTO installation (user_id, app_id) VALUES (?, ?)";
     final String updateQuery = "UPDATE app SET installed_count = installed_count + 1 WHERE id = ?";
 
-    try (Connection connection = dataSource.getConnection();
-        PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
-        PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+    try (final Connection connection = appDataSource.getConnection()) {
+      connection.setAutoCommit(false);
+      try (final PreparedStatement insertStatement = connection.prepareStatement(insertQuery);
+          final PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+        // Add to installation table
+        insertStatement.setInt(1, userId);
+        insertStatement.setInt(2, appId);
+        insertStatement.executeUpdate();
+        // Increment count in app table
+        updateStatement.setInt(1, appId);
+        updateStatement.executeUpdate();
 
-      // Add to installation table
-      insertStatement.setInt(1, userId);
-      insertStatement.setInt(2, appId);
-      insertStatement.executeUpdate();
+        connection.commit();
+        logger.info("Successfully installed App ID {}", appId);
 
-      // Increment count in app table
-      updateStatement.setInt(1, appId);
-      updateStatement.executeUpdate();
-
-      return true;
-
+        return true;
+      } catch (final SQLException exception) {
+        connection.rollback();
+        logger.error(
+            "Installation failed for User {} App {}: {}", userId, appId, exception.getMessage());
+        return false;
+      }
     } catch (final SQLException exception) {
-      exception.printStackTrace();
+      logger.error("DataBase Connection error during installation: {}", exception.getMessage());
       return false;
     }
   }
@@ -70,28 +78,37 @@ public class InstallationRepositoryImpl implements InstallationRepository {
    * @return {@code true} if uninstallation was successful, {@code false} otherwise
    */
   @Override
-  public boolean unInstalled(final int userId, final int appId) {
+  public boolean uninstalled(final int userId, final int appId) {
     final String deleteQuery = "DELETE FROM installation WHERE user_id = ? AND app_id = ?";
     final String updateQuery = "UPDATE app SET installed_count = installed_count - 1 WHERE id = ?";
 
-    try (Connection connection = dataSource.getConnection();
-        PreparedStatement deleteStatement = connection.prepareStatement(deleteQuery);
-        PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+    try (final Connection connection = appDataSource.getConnection()) {
+      connection.setAutoCommit(false);
+      try (final PreparedStatement deleteStatement = connection.prepareStatement(deleteQuery);
+          final PreparedStatement updateStatement = connection.prepareStatement(updateQuery)) {
+        deleteStatement.setInt(1, userId);
+        deleteStatement.setInt(2, appId);
+        final int rowsDeleted = deleteStatement.executeUpdate();
 
-      deleteStatement.setInt(1, userId);
-      deleteStatement.setInt(2, appId);
-      int rowsDeleted = deleteStatement.executeUpdate();
+        if (rowsDeleted > 0) {
+          updateStatement.setInt(1, appId);
+          updateStatement.executeUpdate();
+          connection.commit();
+          logger.info("Successfully uninstalled By App ID {}", appId);
 
-      if (rowsDeleted > 0) {
-        updateStatement.setInt(1, appId);
-        updateStatement.executeUpdate();
-        return true;
-      } else {
+          return true;
+        } else {
+          connection.rollback();
+          return false;
+        }
+
+      } catch (final SQLException exception) {
+        connection.rollback();
+        logger.error("Uninstall error for App {}: {}", appId, exception.getMessage());
         return false;
       }
-
     } catch (final SQLException exception) {
-      exception.printStackTrace();
+      logger.error("DataBase Connection error during uninstall: {}", exception.getMessage());
       return false;
     }
   }
@@ -105,21 +122,20 @@ public class InstallationRepositoryImpl implements InstallationRepository {
    */
   @Override
   public boolean isInstalled(final int userId, final int appId) {
-    final String sql = "SELECT id FROM installation WHERE user_id = ? AND app_id = ?";
+    final String installedQuery = "SELECT id FROM installation WHERE user_id = ? AND app_id = ?";
 
-    try (Connection connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement(sql)) {
-
+    try (final Connection connection = appDataSource.getConnection();
+        final PreparedStatement statement = connection.prepareStatement(installedQuery)) {
       statement.setInt(1, userId);
       statement.setInt(2, appId);
 
-      try (ResultSet resultSet = statement.executeQuery()) {
+      try (final ResultSet resultSet = statement.executeQuery()) {
         return resultSet.next();
       }
-
     } catch (final SQLException exception) {
-      exception.printStackTrace();
+      logger.error("Error checking installation status for : {}", exception.getMessage());
     }
+
     return false;
   }
 
@@ -134,43 +150,48 @@ public class InstallationRepositoryImpl implements InstallationRepository {
    */
   @Override
   public Collection<App> getInstalledApps(final int userId) {
-    Collection<App> installedApps = new ArrayList<>();
+    final Collection<App> installedApps = new ArrayList<>();
     String installQuery =
         "SELECT a.*, u.username, u.role FROM app a "
             + "JOIN installation i ON a.id = i.app_id "
             + "JOIN users u ON a.author_id = u.id "
             + "WHERE i.user_id = ?";
 
-    try (Connection connection = dataSource.getConnection();
-        PreparedStatement statement = connection.prepareStatement(installQuery)) {
-
+    try (final Connection connection = appDataSource.getConnection();
+        final PreparedStatement statement = connection.prepareStatement(installQuery)) {
       statement.setInt(1, userId);
-      ResultSet resultSet = statement.executeQuery();
 
-      while (resultSet.next()) {
-        User author =
-            new User(
-                resultSet.getInt("author_id"),
-                resultSet.getString("username"),
-                null,
-                null,
-                0,
-                resultSet.getString("role"));
+      try (final ResultSet resultSet = statement.executeQuery()) {
+        while (resultSet.next()) {
+          final User author =
+              new User(
+                  resultSet.getInt("author_id"),
+                  resultSet.getString("username"),
+                  null,
+                  null,
+                  0,
+                  resultSet.getString("role"));
 
-        installedApps.add(
-            new App(
-                resultSet.getInt("id"),
-                resultSet.getString("name"),
-                author,
-                resultSet.getString("description"),
-                resultSet.getDouble("version"),
-                new ArrayList<>(),
-                resultSet.getDouble("rating"),
-                resultSet.getInt("installed_count")));
+          final App app =
+              new App(
+                  resultSet.getInt("id"),
+                  resultSet.getString("name"),
+                  author,
+                  resultSet.getString("description"),
+                  resultSet.getDouble("version"),
+                  new ArrayList<>(),
+                  resultSet.getDouble("rating"),
+                  resultSet.getInt("installed_count"));
+
+          installedApps.add(app);
+        }
       }
+
+      logger.info("Fetched {} installed apps for user ID {}", installedApps.size(), userId);
     } catch (final SQLException exception) {
-      exception.printStackTrace();
+      logger.error("Error fetching installed apps for : {}", exception.getMessage());
     }
+
     return installedApps;
   }
 }
